@@ -30,6 +30,7 @@ const PageDetail = ({ blok, story }) => {
         const { data } = await storyblokApi.get('cdn/stories', {
           version: 'draft',
           starts_with: `${story.full_slug.replace(story.slug, '')}`,
+          excluding_slugs: story.full_slug  // Exclude current page
         });
 
         setRelatedPages(data.stories);
