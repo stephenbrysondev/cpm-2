@@ -97,7 +97,6 @@ const PageDetail = ({ blok, story }) => {
               <Image
                 src={blok.image}
                 alt={blok.title}
-                priority
                 width={528}
               />
             )}

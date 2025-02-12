@@ -9,9 +9,9 @@ export default function Image({ src, alt, width = 528, ...props }) {
     const fullSrc = `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}${src}`;
 
     // Use different image URL based on environment
-    const imageUrl = process.env.NODE_ENV === 'development'
-        ? fullSrc  // Use direct URL in development
-        : `/_ipx/w_${width},q_75/${encodeURIComponent(fullSrc)}`; // Use Netlify transform in production
+    const imageUrl = process.env.NETLIFY
+        ? `/_ipx/w_${width},q_75/${encodeURIComponent(fullSrc)}` // Use Netlify transform in Netlify environment
+        : fullSrc; // Use direct URL in all other environments
 
     return (
         <Box
