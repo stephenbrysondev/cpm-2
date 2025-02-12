@@ -98,6 +98,7 @@ const PageDetail = ({ blok, story }) => {
                 src={blok.image}
                 alt={blok.title}
                 width={528}
+                priority
               />
             )}
           </Grid>

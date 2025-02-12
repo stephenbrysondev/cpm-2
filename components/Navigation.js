@@ -133,11 +133,9 @@ export default function Navigation() {
                         }}
                     >
                         <PaletteIcon />
-                        <Link href="/">
-                            <Typography variant={isMobile ? 'body2' : 'body1'} fontWeight={500}>
-                                ColoringPageMagic
-                            </Typography>
-                        </Link>
+                        <Typography variant={isMobile ? 'body2' : 'body1'} fontWeight={500}>
+                            ColoringPageMagic
+                        </Typography>
                     </Box>
 
                     {isMobile ? (
