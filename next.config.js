@@ -1,9 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: [
-            process.env.NEXT_PUBLIC_CLOUDFLARE_URL
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: process.env.NEXT_PUBLIC_CLOUDFLARE_URL,
+                pathname: '/**',
+            }
         ],
+        loader: 'default',
+        domains: ['cpm-2.netlify.app']
     },
 }
 

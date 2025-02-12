@@ -12,7 +12,6 @@
     "start:https": "local-ssl-proxy --source 3010 --target 3000 --cert localhost.pem --key localhost-key.pem"
   },
   "dependencies": {
-    "concurrently": "^8.2.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fontsource/roboto": "^5.1.1",
@@ -20,8 +19,12 @@
     "@mui/material": "^6.4.3",
     "@storyblok/react": "^2.4.7",
     "@supabase/supabase-js": "^2.48.1",
+    "concurrently": "^8.2.2",
     "next": "^12.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.9.4"
   }
 }
