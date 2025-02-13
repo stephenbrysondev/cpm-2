@@ -10,6 +10,7 @@ export default function Page({ story: initialStory }) {
     const story = useStoryblokState(initialStory);
 
     // If no story was found, redirect to 404
+    console.log('story', story);
     if (!story) {
         if (typeof window !== 'undefined') {
             router.push('/404');
