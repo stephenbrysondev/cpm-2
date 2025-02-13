@@ -62,13 +62,13 @@ export async function getStaticPaths() {
             return;
         }
 
-        // Remove organizational folders from the URL
-        const cleanSlug = removeOrganizationalFolders(links[linkKey].slug);
-
-        // Skip the home page
-        if (cleanSlug === 'home') {
+        // Skip the 404 page and home page
+        if (links[linkKey].slug === '404' || links[linkKey].slug === 'home') {
             return;
         }
+
+        // Remove organizational folders from the URL
+        const cleanSlug = removeOrganizationalFolders(links[linkKey].slug);
 
         const splittedSlug = cleanSlug.split("/");
         paths.push({ params: { slug: splittedSlug } });
