@@ -3,9 +3,19 @@ import {
     getStoryblokApi,
     StoryblokComponent,
 } from "@storyblok/react";
+import { useRouter } from 'next/router';
 
-export default function Page({ story }) {
-    story = useStoryblokState(story);
+export default function Page({ story: initialStory }) {
+    const router = useRouter();
+    const story = useStoryblokState(initialStory);
+
+    // If no story was found, redirect to 404
+    if (!story) {
+        if (typeof window !== 'undefined') {
+            router.push('/404');
+        }
+        return null;
+    }
 
     return (
         <div>
@@ -15,25 +25,27 @@ export default function Page({ story }) {
 }
 
 export async function getStaticProps({ params }) {
-    let slug = params.slug ? params.slug.join("/") : "home";
+    try {
+        const storyblokApi = getStoryblokApi();
+        const { data } = await storyblokApi.get(`cdn/stories/${params.slug.join('/')}`, {
+            version: "draft",
+        });
 
-    // Add back the organizational folders for Storyblok API
-    slug = addOrganizationalFolders(slug);
-
-    let sbParams = {
-        version: "draft", // or 'published'
-    };
-
-    const storyblokApi = getStoryblokApi();
-    let { data } = await storyblokApi.get(`cdn/stories/${slug}`, sbParams);
-
-    return {
-        props: {
-            story: data ? data.story : false,
-            key: data ? data.story.id : false,
-        },
-        revalidate: 3600,
-    };
+        return {
+            props: {
+                story: data ? data.story : false,
+            },
+            revalidate: 3600,
+        };
+    } catch (error) {
+        // If story is not found, return false for story prop
+        return {
+            props: {
+                story: false,
+            },
+            revalidate: 3600,
+        };
+    }
 }
 
 export async function getStaticPaths() {
