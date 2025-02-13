@@ -27,7 +27,12 @@ export default function Page({ story: initialStory }) {
 export async function getStaticProps({ params }) {
     try {
         const storyblokApi = getStoryblokApi();
-        const { data } = await storyblokApi.get(`cdn/stories/${params.slug.join('/')}`, {
+
+        // Add back organizational folders for the API call
+        let slug = params.slug.join('/');
+        const fullSlug = addOrganizationalFolders(slug);
+
+        const { data } = await storyblokApi.get(`cdn/stories/${fullSlug}`, {
             version: "draft",
         });
 
@@ -38,6 +43,7 @@ export async function getStaticProps({ params }) {
             revalidate: 3600,
         };
     } catch (error) {
+        console.error('Error fetching story:', error);
         // If story is not found, return false for story prop
         return {
             props: {
