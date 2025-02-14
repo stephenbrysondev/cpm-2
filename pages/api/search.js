@@ -21,6 +21,8 @@ export default async function handler(req, res) {
             resolve_links: 'none',
         });
 
+        console.log('debug', category, data);
+
         // Add caching headers
         res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 

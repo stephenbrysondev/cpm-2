@@ -24,20 +24,22 @@ const getCategoryFromSlug = (fullSlug) => {
 };
 
 const PageDetail = ({ blok, story, relatedPages = [] }) => {
+  // Get the category more reliably
+  const category = story.full_slug
+    .split('/')
+    .filter(segment => segment !== 'pages' && segment !== 'coloring-pages' && segment !== 'categories')[0];
 
-  console.log(story.path);
-  const category = story.full_slug.split('/')[2]; // Get the part between /coloring-pages/ and the next /
-
-  console.log(category);
   const { data, error, isValidating } = useSWR(
-    `/api/search?category=${category}`,
+    category ? `/api/search?category=${encodeURIComponent(category)}` : null,
     fetcher,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+      onError: (err) => console.error('SWR Error:', err)
+    }
   );
 
-  console.log(story);
-
   const handleDownload = () => {
+    if (!blok?.image) return;
     const originalImageUrl = `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}${blok.image}`;
     const link = document.createElement('a');
     link.href = originalImageUrl;
@@ -145,13 +147,6 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
                   )}
                   <Box>
                     <Typography variant="h5">{page.name}</Typography>
-                    {page.content?.tags && (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {page.content.tags.split(',').map((tag, index) => (
-                          <Chip key={index} label={tag.trim()} size="small" variant="outlined" />
-                        ))}
-                      </Box>
-                    )}
                   </Box>
                 </Paper>
               </Link>
