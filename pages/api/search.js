@@ -14,6 +14,7 @@ export default async function handler(req, res) {
         const storyblokApi = getStoryblokApi();
 
         const queryParams = category ? {
+            // For category pages - show detail pages
             version: 'draft',
             starts_with: `coloring-pages/categories/${category}`,
             excluding_slugs: `coloring-pages/categories/${category}`,
@@ -22,9 +23,10 @@ export default async function handler(req, res) {
             resolve_relations: 'none',
             resolve_links: 'none',
         } : {
+            // For search - show only categories
             version: 'draft',
             starts_with: 'coloring-pages/categories/',
-            is_startpage: 1,
+            excluding_slugs: 'coloring-pages/categories/*/pages/*', // Exclude all detail pages
             per_page: 100,
             search_term: q,
             resolve_relations: 'none',
