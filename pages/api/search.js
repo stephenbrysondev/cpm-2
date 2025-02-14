@@ -1,21 +1,22 @@
 import { getStoryblokApi } from "@storyblok/react";
 
 export default async function handler(req, res) {
-    const { q, path } = req.query;
+    const { q, category, path } = req.query;
 
-    console.log('[API] Search params:', { q, path });
+    console.log('[API] Search params:', { q, category, path });
 
-    if (!q && !path) {
+    if (!q && !category && !path) {
         console.log('[API] Missing required params');
-        return res.status(400).json({ error: 'Query or path parameter is required' });
+        return res.status(400).json({ error: 'Query, category, or path parameter is required' });
     }
 
     try {
         const storyblokApi = getStoryblokApi();
+
         let queryParams;
 
         if (path) {
-            // For category or detail pages - show related pages
+            // Remove any trailing slash and ensure we're looking in the pages directory
             const cleanPath = path.replace(/\/$/, '');
             queryParams = {
                 version: 'draft',
@@ -23,7 +24,6 @@ export default async function handler(req, res) {
                 excluding_slugs: cleanPath, // Exclude the category page itself
                 is_startpage: 0,
                 per_page: 100,
-                sort_by: 'name:asc',
                 resolve_relations: 'none',
                 resolve_links: 'none',
             };
@@ -31,11 +31,10 @@ export default async function handler(req, res) {
             // For search - show only categories
             queryParams = {
                 version: 'draft',
-                starts_with: 'coloring-pages/categories',
+                starts_with: 'coloring-pages/categories/',
                 excluding_slugs: 'coloring-pages/categories/*/pages/*', // Exclude all detail pages
                 per_page: 100,
                 search_term: q,
-                sort_by: 'name:asc',
                 resolve_relations: 'none',
                 resolve_links: 'none',
             };
