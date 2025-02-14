@@ -145,7 +145,7 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
       ) : relatedItems.length > 0 ? (
         <Grid container spacing={2}>
           {relatedItems.map((page) => (
-            <Grid key={page.id} item size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
                   p: 4,
