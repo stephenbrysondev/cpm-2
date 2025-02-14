@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import useSWR from 'swr';
 import Link from 'next/link';
-import { Paper, TextField, Typography, Chip, Box, Alert } from '@mui/material';
+import { Paper, TextField, Typography, Chip, Box, Alert, Button } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { storyblokEditable } from '@storyblok/react';
 import Image from '../Image';
@@ -14,65 +15,42 @@ const getTags = (tagsString) => {
     return tagsString.split(',').map(tag => tag.trim());
 };
 
+// Fetcher function for useSWR
+const fetcher = (url) => fetch(url).then(res => res.json());
+
 export default function Search({ blok, initialResults = [] }) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const [isPending, startTransition] = useTransition();
-    const [results, setResults] = useState(initialResults);
+    const [query, setQuery] = useState(searchParams.get('q') || '');
+    const [page, setPage] = useState(1);
 
-    // Handle initial search from URL params
+    const { data, error, isValidating } = useSWR(
+        query ? `/api/search?q=${encodeURIComponent(query)}&page=${page}` : null,
+        fetcher,
+        { revalidateOnFocus: false }
+    );
+
+    // Debounced search effect
     useEffect(() => {
-        const query = searchParams.get('q');
-        if (query) {
-            fetch(`/api/search?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!Array.isArray(data)) throw new Error('Invalid response');
-                    setResults(data);
-                })
-                .catch(error => {
-                    console.error('Search error:', error);
-                    setResults([]);
-                });
-        }
-    }, [searchParams]); // Run only on mount
+        const delaySearch = setTimeout(() => {
+            if (query) {
+                router.replace(`${pathname}?q=${query}`);
+            } else {
+                router.replace(pathname);
+            }
+        }, 300);
 
-    const handleSearch = (term) => {
-        const params = new URLSearchParams(searchParams);
-        if (term) {
-            params.set('q', term);
-        } else {
-            params.delete('q');
-        }
+        return () => clearTimeout(delaySearch);
+    }, [query, router, pathname]);
 
-        startTransition(() => {
-            router.replace(`${pathname}?${params.toString()}`);
-        });
-
-        // Optimistic update
-        if (!term) {
-            setResults([]);
-            return;
-        }
-
-        fetch(`/api/search?q=${encodeURIComponent(term)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (!Array.isArray(data)) throw new Error('Invalid response');
-                setResults(data);
-            })
-            .catch(error => {
-                console.error('Search error:', error);
-                setResults([]);
-            });
+    const handleSearch = (e) => {
+        setQuery(e.target.value);
+        setPage(1);
     };
 
-    // Debounce the search input
-    const handleSearchDebounced = (e) => {
-        const value = e.target.value;
-        clearTimeout(window.searchTimeout);
-        window.searchTimeout = setTimeout(() => handleSearch(value), 300);
+    const handleLoadMore = () => {
+        setPage((prevPage) => prevPage + 1);
     };
 
     return (
@@ -89,17 +67,17 @@ export default function Search({ blok, initialResults = [] }) {
                     id="search-input"
                     label="Search for anything..."
                     variant="outlined"
-                    onChange={handleSearchDebounced}
-                    defaultValue={searchParams.get('q') || ''}
+                    onChange={handleSearch}
+                    value={query}
                     placeholder="Search coloring pages..."
                 />
             </Paper>
 
-            {isPending ? <Loader message="Searching..." /> : (
+            {isValidating ? <Loader message="Searching..." /> : (
                 <>
-                    {results.length > 0 && (
+                    {data?.length > 0 && (
                         <Grid container spacing={2}>
-                            {results.map((result) => (
+                            {data.map((result) => (
                                 <Grid key={result.id} size={{ xs: 12, sm: 6, md: 4 }}>
                                     <Link href={`/${result.full_slug.replace('categories/', '')}`}>
                                         <Paper sx={{
@@ -152,14 +130,23 @@ export default function Search({ blok, initialResults = [] }) {
                             ))}
                         </Grid>
                     )}
+
+                    {/* Load More Button for Pagination */}
+                    {data?.length > 0 && (
+                        <Box sx={{ textAlign: 'center', mt: 3 }}>
+                            <Button variant="contained" onClick={handleLoadMore} disabled={isValidating}>
+                                {isValidating ? 'Loading...' : 'Load More'}
+                            </Button>
+                        </Box>
+                    )}
                 </>
             )}
 
-            {searchParams.get('q') && !isPending && results.length === 0 && (
+            {query && !isValidating && data?.stories?.length === 0 && (
                 <Alert severity="info">
                     No results found. Try searching for something else.
                 </Alert>
             )}
         </>
     );
-} 
+}

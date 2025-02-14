@@ -5,9 +5,9 @@ import {
 } from "@storyblok/react";
 import { useRouter } from 'next/router';
 
-export default function Page({ story, pages = [], relatedPages = [] }) {
+export default function Page({ story: initialStory }) {
     const router = useRouter();
-    story = useStoryblokState(story);
+    const story = useStoryblokState(initialStory);
 
     // If no story was found, redirect to 404
     if (!story) {
@@ -19,12 +19,7 @@ export default function Page({ story, pages = [], relatedPages = [] }) {
 
     return (
         <div>
-            <StoryblokComponent
-                blok={story.content}
-                story={story}
-                pages={pages}
-                relatedPages={relatedPages}
-            />
+            <StoryblokComponent blok={story.content} story={story} />
         </div>
     );
 }
@@ -32,56 +27,27 @@ export default function Page({ story, pages = [], relatedPages = [] }) {
 export async function getStaticProps({ params }) {
     try {
         const storyblokApi = getStoryblokApi();
+
+        // Add back organizational folders for the API call
         let slug = params.slug.join('/');
         const fullSlug = addOrganizationalFolders(slug);
 
-        // Fetch story and additional content in parallel
-        const [storyRes, additionalRes] = await Promise.all([
-            storyblokApi.get(`cdn/stories/${fullSlug}`, {
-                version: "draft",
-            }),
-            // Fetch different content based on page type
-            fullSlug.includes('/pages/')
-                ? // For detail pages, fetch related pages
-                storyblokApi.get('cdn/stories', {
-                    version: "draft",
-                    starts_with: `${fullSlug.split('/pages/')[0]}/pages/`,
-                    excluding_slugs: fullSlug,
-                    per_page: 100,
-                    resolve_relations: 'none',
-                    resolve_links: 'none'
-                })
-                : // For category pages, fetch category pages
-                storyblokApi.get('cdn/stories', {
-                    version: "draft",
-                    starts_with: `${fullSlug}/pages/`,
-                    per_page: 100,
-                    resolve_relations: 'none',
-                    resolve_links: 'none'
-                })
-        ]);
-
-        // Determine if this is a detail page or category page
-        const isDetailPage = fullSlug.includes('/pages/');
+        const { data } = await storyblokApi.get(`cdn/stories/${fullSlug}`, {
+            version: "draft",
+        });
 
         return {
             props: {
-                story: storyRes.data.story,
-                // Pass data to appropriate prop based on page type
-                ...(isDetailPage
-                    ? { relatedPages: additionalRes.data.stories }
-                    : { pages: additionalRes.data.stories }
-                ),
+                story: data ? data.story : false,
             },
             revalidate: 3600,
         };
     } catch (error) {
         console.error('Error fetching story:', error);
+        // If story is not found, return false for story prop
         return {
             props: {
                 story: false,
-                pages: [],
-                relatedPages: [],
             },
             revalidate: 3600,
         };
@@ -98,37 +64,25 @@ export async function getStaticPaths() {
     const links = data.links;
 
     Object.keys(links).forEach((linkKey) => {
-        const link = links[linkKey];
-
-        // Skip folders and empty slugs
-        if (link.is_folder || !link.slug) {
+        if (links[linkKey].is_folder || !links[linkKey].slug) {
             return;
         }
 
         // Skip the 404 page and home page
-        if (link.slug === '404' || link.slug === 'home') {
-            return;
-        }
-
-        // Skip organizational folders themselves
-        if (link.slug === 'categories' || link.slug === 'pages') {
+        if (links[linkKey].slug === '404' || links[linkKey].slug === 'home') {
             return;
         }
 
         // Remove organizational folders from the URL
-        const cleanSlug = removeOrganizationalFolders(link.slug);
+        const cleanSlug = removeOrganizationalFolders(links[linkKey].slug);
 
-        // Split and create path params
         const splittedSlug = cleanSlug.split("/");
         paths.push({ params: { slug: splittedSlug } });
-
     });
-
 
     return {
         paths: paths,
-        // Use blocking to handle paths not generated at build time
-        fallback: 'blocking',
+        fallback: false,
     };
 }
 
@@ -144,9 +98,7 @@ function removeOrganizationalFolders(slug) {
     );
 
     // Join the remaining segments back together
-    const cleanSlug = cleanedSegments.join("/");
-
-    return cleanSlug;
+    return cleanedSegments.join("/");
 }
 
 // Helper function to add organizational folders back for Storyblok API
