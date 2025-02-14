@@ -24,10 +24,8 @@ const getCategoryFromSlug = (fullSlug) => {
 };
 
 const PageDetail = ({ blok, story, relatedPages = [] }) => {
-  // Get the category more reliably
-  const category = story.full_slug
-    .split('/')
-    .filter(segment => segment !== 'pages' && segment !== 'coloring-pages' && segment !== 'categories')[0];
+  // Get the category from the full slug
+  const category = story.full_slug.split('/')[1];
 
   const { data, error, isValidating } = useSWR(
     category ? `/api/search?category=${encodeURIComponent(category)}` : null,
@@ -132,7 +130,7 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
         <Grid container spacing={2}>
           {data.map((page) => (
             <Grid key={page.id} item size={{ xs: 12, sm: 6, md: 4 }}>
-              <Link href={`/${page.full_slug.replace('/categories', '').replace('/pages', '')}`}>
+              <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
                   p: 4,
                   display: 'flex',

@@ -15,19 +15,24 @@ const getTags = (tagsString) => {
 const fetcher = (url) => fetch(url).then(res => res.json());
 
 const PageCategory = ({ blok, story, pages = [] }) => {
-  // Get category more reliably
-  const category = story.full_slug
-    .split('/')
-    .filter(segment => segment !== 'coloring-pages' && segment !== 'categories')[0];
+  // Get the full category path from the story slug and remove trailing slash
+  const categoryPath = story.full_slug.replace(/\/$/, '');
+
+  console.log('debug', categoryPath);
 
   const { data, error, isValidating } = useSWR(
-    category ? `/api/search?category=${encodeURIComponent(category)}` : null,
+    categoryPath ? `/api/search?path=${encodeURIComponent(categoryPath)}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
       onError: (err) => console.error('SWR Error:', err)
     }
   );
+
+  // Get a clean category name for display
+  const categoryName = categoryPath.split('/').pop().split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
   return (
     <Container
@@ -51,9 +56,9 @@ const PageCategory = ({ blok, story, pages = [] }) => {
           textAlign: 'center'
         }}
       >
-        <Typography variant="h2" component="h1">{blok.title}</Typography>
+        <Typography variant="h2" component="h1">{categoryName} Coloring Pages</Typography>
         <Typography variant="body1">
-          Check out these <b>{blok.title}</b> coloring pages! We have a selection of <b>{data?.length || 0}</b> coloring pages for you to choose from.
+          Check out these <b>{categoryName}</b> coloring pages! We have a selection of <b>{data?.length || 0}</b> coloring pages for you to choose from.
         </Typography>
         {blok.tags && (
           <Box sx={{
@@ -76,7 +81,7 @@ const PageCategory = ({ blok, story, pages = [] }) => {
         <Grid container spacing={2}>
           {data.map((page) => (
             <Grid key={page.id} item size={{ xs: 12, sm: 6, md: 4 }}>
-              <Link href={`/${page.full_slug.replace('/categories', '').replace('/pages', '')}`}>
+              <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
                   p: 4,
                   display: 'flex',

@@ -1,37 +1,55 @@
 import { getStoryblokApi } from "@storyblok/react";
 
 export default async function handler(req, res) {
-    const { q, category } = req.query;
+    const { q, category, path } = req.query;
 
-    console.log('[API] Search params:', { q, category });
+    console.log('[API] Search params:', { q, category, path });
 
-    if (!q && !category) {
+    if (!q && !category && !path) {
         console.log('[API] Missing required params');
-        return res.status(400).json({ error: 'Query or category parameter is required' });
+        return res.status(400).json({ error: 'Query, category, or path parameter is required' });
     }
 
     try {
         const storyblokApi = getStoryblokApi();
 
-        const queryParams = category ? {
+        let queryParams;
+
+        if (path) {
+            // Remove any trailing slash and ensure we're looking in the pages directory
+            const cleanPath = path.replace(/\/$/, '');
+            queryParams = {
+                version: 'draft',
+                starts_with: `${cleanPath}/pages`,
+                excluding_slugs: cleanPath, // Exclude the category page itself
+                is_startpage: 0,
+                per_page: 100,
+                resolve_relations: 'none',
+                resolve_links: 'none',
+            };
+        } else if (category) {
             // For category pages - show detail pages
-            version: 'draft',
-            starts_with: `coloring-pages/categories/${category}`,
-            excluding_slugs: `coloring-pages/categories/${category}`,
-            is_startpage: 0,
-            per_page: 100,
-            resolve_relations: 'none',
-            resolve_links: 'none',
-        } : {
+            queryParams = {
+                version: 'draft',
+                starts_with: `coloring-pages/categories/${category}`,
+                excluding_slugs: `coloring-pages/categories/${category}`,
+                is_startpage: 0,
+                per_page: 100,
+                resolve_relations: 'none',
+                resolve_links: 'none',
+            };
+        } else {
             // For search - show only categories
-            version: 'draft',
-            starts_with: 'coloring-pages/categories/',
-            excluding_slugs: 'coloring-pages/categories/*/pages/*', // Exclude all detail pages
-            per_page: 100,
-            search_term: q,
-            resolve_relations: 'none',
-            resolve_links: 'none',
-        };
+            queryParams = {
+                version: 'draft',
+                starts_with: 'coloring-pages/categories/',
+                excluding_slugs: 'coloring-pages/categories/*/pages/*', // Exclude all detail pages
+                per_page: 100,
+                search_term: q,
+                resolve_relations: 'none',
+                resolve_links: 'none',
+            };
+        }
 
         console.log('[API] Query params:', queryParams);
 
