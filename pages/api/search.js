@@ -14,15 +14,16 @@ export default async function handler(req, res) {
         const storyblokApi = getStoryblokApi();
 
         const queryParams = category ? {
-            starts_with: `coloring-pages/categories/${category}/pages/`,
             version: 'draft',
+            starts_with: `coloring-pages/categories/${category}`,
+            excluding_slugs: `coloring-pages/categories/${category}`,
             is_startpage: 0,
             per_page: 100,
             resolve_relations: 'none',
             resolve_links: 'none',
         } : {
-            starts_with: 'coloring-pages/categories/',
             version: 'draft',
+            starts_with: 'coloring-pages/categories/',
             is_startpage: 1,
             per_page: 100,
             search_term: q,
