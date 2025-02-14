@@ -18,8 +18,6 @@ const PageCategory = ({ blok, story, pages = [] }) => {
   // Get the full category path from the story slug and remove trailing slash
   const categoryPath = story.full_slug.replace(/\/$/, '');
 
-  console.log('debug', categoryPath);
-
   const { data, error, isValidating } = useSWR(
     categoryPath ? `/api/search?path=${encodeURIComponent(categoryPath)}` : null,
     fetcher,
@@ -30,9 +28,12 @@ const PageCategory = ({ blok, story, pages = [] }) => {
   );
 
   // Get a clean category name for display
-  const categoryName = categoryPath.split('/').pop().split('-')
+  const categoryName = story.name || categoryPath.split('/').pop().split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+
+  // Filter out any non-page items and sort by name
+  const pageItems = data?.filter(item => item.full_slug.includes('/pages/')) || [];
 
   return (
     <Container
@@ -58,7 +59,7 @@ const PageCategory = ({ blok, story, pages = [] }) => {
       >
         <Typography variant="h2" component="h1">{categoryName} Coloring Pages</Typography>
         <Typography variant="body1">
-          Check out these <b>{categoryName}</b> coloring pages! We have a selection of <b>{data?.length || 0}</b> coloring pages for you to choose from.
+          Check out these <b>{categoryName}</b> coloring pages! We have a selection of <b>{pageItems.length}</b> coloring pages for you to choose from.
         </Typography>
         {blok.tags && (
           <Box sx={{
@@ -77,10 +78,10 @@ const PageCategory = ({ blok, story, pages = [] }) => {
         <Loader message="Loading coloring pages..." />
       ) : error ? (
         <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
-      ) : data && data.length > 0 ? (
+      ) : pageItems.length > 0 ? (
         <Grid container spacing={2}>
-          {data.map((page) => (
-            <Grid key={page.id} item size={{ xs: 12, sm: 6, md: 4 }}>
+          {pageItems.map((page) => (
+            <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
                   p: 4,
@@ -98,16 +99,7 @@ const PageCategory = ({ blok, story, pages = [] }) => {
                       priority={page.index < 3} // Prioritize first 3 images
                     />
                   )}
-                  <Box>
-                    <Typography variant="h5">{page.name}</Typography>
-                    {page.content?.tags && (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {getTags(page.content.tags).map((tag, index) => (
-                          <Chip key={index} label={tag} size="small" variant="outlined" />
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
+                  <Typography variant="h5">{page.name}</Typography>
                 </Paper>
               </Link>
             </Grid>

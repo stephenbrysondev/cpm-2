@@ -6,12 +6,11 @@ import Feature from "../components/storyblok/Feature";
 import Grid from "../components/storyblok/Grid";
 import Page from "../components/storyblok/Page";
 import Teaser from "../components/storyblok/Teaser";
-// import Search from "../components/storyblok/Search";
 import Hero from "../components/storyblok/Hero";
 import Layout from "../components/Layout";
 import PageDetail from "../components/storyblok/PageDetail";
 import PageCategory from "../components/storyblok/PageCategory";
-
+import PageSearch from "../components/storyblok/PageSearch";
 import '../assets/styles/reset.css';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -23,10 +22,10 @@ const components = {
   grid: Grid,
   teaser: Teaser,
   page: Page,
-  // search: Search,
   hero: Hero,
   'page-detail': PageDetail,
   'page-category': PageCategory,
+  'page-search': PageSearch,
 };
 
 storyblokInit({

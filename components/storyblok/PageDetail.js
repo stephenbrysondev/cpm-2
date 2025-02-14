@@ -1,11 +1,12 @@
 'use client';
 
 import useSWR from 'swr';
-import { Container, Typography, Paper, Box, Button } from "@mui/material";
+import { Container, Typography, Paper, Box, Button, Chip, Alert } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import Link from 'next/link';
 import Image from '../Image';
 import DownloadIcon from '@mui/icons-material/Download';
+import Loader from '../Loader';
 
 const getTags = (tagsString) => {
   if (!tagsString) return [];
@@ -24,17 +25,23 @@ const getCategoryFromSlug = (fullSlug) => {
 };
 
 const PageDetail = ({ blok, story, relatedPages = [] }) => {
-  // Get the category from the full slug
-  const category = story.full_slug.split('/')[1];
+  // Get the category path by removing the /pages/... part
+  const categoryPath = story.full_slug.split('/pages/')[0].replace(/\/$/, '');
 
   const { data, error, isValidating } = useSWR(
-    category ? `/api/search?category=${encodeURIComponent(category)}` : null,
+    categoryPath ? `/api/search?path=${encodeURIComponent(categoryPath)}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
       onError: (err) => console.error('SWR Error:', err)
     }
   );
+
+  // Filter out the current page and ensure we only show page items
+  const relatedItems = data?.filter(item =>
+    item.full_slug.includes('/pages/') &&
+    item.id !== story.id
+  ) || [];
 
   const handleDownload = () => {
     if (!blok?.image) return;
@@ -48,6 +55,11 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Get category name for display
+  const categoryName = categoryPath.split('/').pop().split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
   return (
     <Container
@@ -85,7 +97,7 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
                 {blok.title}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {blok.title} printable coloring page plus {relatedPages.length} free {getCategoryFromSlug(story.full_slug)} coloring pages, from easy to advanced. Perfect for kids and adults - download, print, and start coloring now!
+                {blok.title} printable coloring page plus {relatedItems.length} free {categoryName} coloring pages, from easy to advanced. Perfect for kids and adults - download, print, and start coloring now!
               </Typography>
 
               {blok.tags && (
@@ -126,9 +138,13 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
         </Grid>
       </Paper>
 
-      {data && (
+      {isValidating ? (
+        <Loader message="Loading coloring pages..." />
+      ) : error ? (
+        <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
+      ) : relatedItems.length > 0 ? (
         <Grid container spacing={2}>
-          {data.map((page) => (
+          {relatedItems.map((page) => (
             <Grid key={page.id} item size={{ xs: 12, sm: 6, md: 4 }}>
               <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
@@ -141,16 +157,29 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
                   '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
                 }}>
                   {page.content?.image && (
-                    <Image src={page.content.image} alt={page.name} />
+                    <Image
+                      src={page.content.image}
+                      alt={page.name}
+                      priority={page.index < 3} // Prioritize first 3 images
+                    />
                   )}
                   <Box>
                     <Typography variant="h5">{page.name}</Typography>
+                    {page.content?.tags && (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {getTags(page.content.tags).map((tag, index) => (
+                          <Chip key={index} label={tag} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                    )}
                   </Box>
                 </Paper>
               </Link>
             </Grid>
           ))}
         </Grid>
+      ) : (
+        <Alert severity="info">No related coloring pages found.</Alert>
       )}
     </Container>
   );
