@@ -98,24 +98,36 @@ export async function getStaticPaths() {
     const links = data.links;
 
     Object.keys(links).forEach((linkKey) => {
-        if (links[linkKey].is_folder || !links[linkKey].slug) {
+        const link = links[linkKey];
+
+        // Skip folders and empty slugs
+        if (link.is_folder || !link.slug) {
             return;
         }
 
         // Skip the 404 page and home page
-        if (links[linkKey].slug === '404' || links[linkKey].slug === 'home') {
+        if (link.slug === '404' || link.slug === 'home') {
+            return;
+        }
+
+        // Skip organizational folders themselves
+        if (link.slug === 'categories' || link.slug === 'pages') {
             return;
         }
 
         // Remove organizational folders from the URL
-        const cleanSlug = removeOrganizationalFolders(links[linkKey].slug);
+        const cleanSlug = removeOrganizationalFolders(link.slug);
 
+        // Split and create path params
         const splittedSlug = cleanSlug.split("/");
         paths.push({ params: { slug: splittedSlug } });
+
     });
+
 
     return {
         paths: paths,
+        // Use blocking to handle paths not generated at build time
         fallback: 'blocking',
     };
 }
@@ -132,7 +144,9 @@ function removeOrganizationalFolders(slug) {
     );
 
     // Join the remaining segments back together
-    return cleanedSegments.join("/");
+    const cleanSlug = cleanedSegments.join("/");
+
+    return cleanSlug;
 }
 
 // Helper function to add organizational folders back for Storyblok API
