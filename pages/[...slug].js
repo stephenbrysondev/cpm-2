@@ -5,9 +5,9 @@ import {
 } from "@storyblok/react";
 import { useRouter } from 'next/router';
 
-export default function Page({ story: initialStory }) {
+export default function Page({ story, pages = [], relatedPages = [] }) {
     const router = useRouter();
-    const story = useStoryblokState(initialStory);
+    story = useStoryblokState(story);
 
     // If no story was found, redirect to 404
     if (!story) {
@@ -19,7 +19,12 @@ export default function Page({ story: initialStory }) {
 
     return (
         <div>
-            <StoryblokComponent blok={story.content} story={story} />
+            <StoryblokComponent
+                blok={story.content}
+                story={story}
+                pages={pages}
+                relatedPages={relatedPages}
+            />
         </div>
     );
 }
@@ -27,27 +32,56 @@ export default function Page({ story: initialStory }) {
 export async function getStaticProps({ params }) {
     try {
         const storyblokApi = getStoryblokApi();
-
-        // Add back organizational folders for the API call
         let slug = params.slug.join('/');
         const fullSlug = addOrganizationalFolders(slug);
 
-        const { data } = await storyblokApi.get(`cdn/stories/${fullSlug}`, {
-            version: "draft",
-        });
+        // Fetch story and additional content in parallel
+        const [storyRes, additionalRes] = await Promise.all([
+            storyblokApi.get(`cdn/stories/${fullSlug}`, {
+                version: "draft",
+            }),
+            // Fetch different content based on page type
+            fullSlug.includes('/pages/')
+                ? // For detail pages, fetch related pages
+                storyblokApi.get('cdn/stories', {
+                    version: "draft",
+                    starts_with: `${fullSlug.split('/pages/')[0]}/pages/`,
+                    excluding_slugs: fullSlug,
+                    per_page: 100,
+                    resolve_relations: 'none',
+                    resolve_links: 'none'
+                })
+                : // For category pages, fetch category pages
+                storyblokApi.get('cdn/stories', {
+                    version: "draft",
+                    starts_with: `${fullSlug}/pages/`,
+                    per_page: 100,
+                    resolve_relations: 'none',
+                    resolve_links: 'none'
+                })
+        ]);
+
+        // Determine if this is a detail page or category page
+        const isDetailPage = fullSlug.includes('/pages/');
 
         return {
             props: {
-                story: data ? data.story : false,
+                story: storyRes.data.story,
+                // Pass data to appropriate prop based on page type
+                ...(isDetailPage
+                    ? { relatedPages: additionalRes.data.stories }
+                    : { pages: additionalRes.data.stories }
+                ),
             },
             revalidate: 3600,
         };
     } catch (error) {
         console.error('Error fetching story:', error);
-        // If story is not found, return false for story prop
         return {
             props: {
                 story: false,
+                pages: [],
+                relatedPages: [],
             },
             revalidate: 3600,
         };

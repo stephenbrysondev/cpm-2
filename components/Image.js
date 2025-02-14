@@ -9,8 +9,6 @@ export default function Image({ src, alt, width = 528, fetchPriority, ...props }
     // Construct the full source URL
     const fullSrc = `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}${src}`;
 
-    console.log(fetchPriority);
-
     return (
         <Box
             sx={{

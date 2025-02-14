@@ -1,13 +1,14 @@
-import { storyblokEditable, getStoryblokApi } from "@storyblok/react";
-import { useState, useEffect } from 'react';
-import { Container, Typography, Paper, Button, Box, Divider, Link } from "@mui/material";
-import Loader from '../Loader';
+import { storyblokEditable } from "@storyblok/react";
+import { Container, Typography, Paper, Box, Button } from "@mui/material";
 import Grid from '@mui/material/Grid2';
-import DownloadIcon from '@mui/icons-material/Download';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import ShareIcon from '@mui/icons-material/Share';
-import { useAuth } from "../../lib/context/AuthContext";
+import Link from 'next/link';
 import Image from '../Image';
+import DownloadIcon from '@mui/icons-material/Download';
+
+const getTags = (tagsString) => {
+  if (!tagsString) return [];
+  return tagsString.split(',').map(tag => tag.trim());
+};
 
 const getCategoryFromSlug = (fullSlug) => {
   const parts = fullSlug.split('/');
@@ -18,60 +19,17 @@ const getCategoryFromSlug = (fullSlug) => {
     .join(' ');
 };
 
-const PageDetail = ({ blok, story }) => {
-  const { user } = useAuth();
-  const [relatedPages, setRelatedPages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPages = async () => {
-      try {
-        const storyblokApi = getStoryblokApi();
-        const { data } = await storyblokApi.get('cdn/stories', {
-          version: 'draft',
-          starts_with: `${story.full_slug.replace(story.slug, '')}`,
-          excluding_slugs: story.full_slug  // Exclude current page
-        });
-
-        setRelatedPages(data.stories);
-      } catch (error) {
-        console.error('Error fetching pages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (story) {
-      fetchPages();
-    }
-  }, [story]);
-
+const PageDetail = ({ blok, story, relatedPages = [] }) => {
   const handleDownload = () => {
-    // Get the original image URL without any transformations
     const originalImageUrl = `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_URL}${blok.image}`;
-
-    // Create a link and trigger download
     const link = document.createElement('a');
     link.href = originalImageUrl;
-    link.download = `${story.name}.png`; // Add .png extension for better UX
-
-    // Optional: Open in new tab as fallback for browsers that don't support download
+    link.download = `${story.name}.png`;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleFavorite = () => {
-    // TODO: Implement favorite functionality
-    console.log('Favorite clicked');
-  };
-
-  const handleShare = () => {
-    // TODO: Implement share functionality
-    console.log('Share clicked');
   };
 
   return (
@@ -85,12 +43,7 @@ const PageDetail = ({ blok, story }) => {
         gap: 2
       }}
     >
-      <Paper
-        elevation={1}
-        sx={{
-          p: 4,
-        }}
-      >
+      <Paper elevation={1} sx={{ p: 4 }}>
         <Grid container spacing={4}>
           {/* Image Section */}
           <Grid size={{ xs: 12, md: 6 }}>
@@ -99,7 +52,7 @@ const PageDetail = ({ blok, story }) => {
                 src={blok.image}
                 alt={blok.title}
                 width={528}
-                priority
+                priority // Always prioritize main image
               />
             )}
           </Grid>
@@ -115,40 +68,33 @@ const PageDetail = ({ blok, story }) => {
               <Typography variant="h4" component="h1">
                 {blok.title}
               </Typography>
-              <Divider />
               <Typography variant="body1" color="text.secondary">
                 {blok.title} printable coloring page plus {relatedPages.length} free {getCategoryFromSlug(story.full_slug)} coloring pages, from easy to advanced. Perfect for kids and adults - download, print, and start coloring now!
               </Typography>
 
-              <Divider />
-
-              {/* <Box sx={{
+              {blok.tags && (
+                <Box sx={{
                   display: 'flex',
-                  gap: 1,
+                  gap: .5,
+                  flexWrap: 'wrap',
                 }}>
-                  {user && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<FavoriteBorderIcon />}
-                      onClick={handleFavorite}
-                      fullWidth
+                  {getTags(blok.tags).map((tag, index) => (
+                    <Typography
+                      key={index}
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mr: 1 }}
                     >
-                      Save to Favorites
-                    </Button>
-                  )}
+                      #{tag}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
 
-                  <Button
-                    variant="outlined"
-                    startIcon={<ShareIcon />}
-                    onClick={handleShare}
-                    fullWidth
-                  >
-                    Share
-                  </Button>
-                </Box> */}
               <Box sx={{
                 display: 'flex',
                 gap: 1,
+                mt: 'auto'
               }}>
                 <Button
                   variant="contained"
@@ -164,31 +110,28 @@ const PageDetail = ({ blok, story }) => {
         </Grid>
       </Paper>
 
-      {loading ? (
-        <Loader message="Loading coloring pages..." />
-      ) : (
+      {relatedPages.length > 0 && (
         <Grid container spacing={2}>
-          {relatedPages.map((page) => (
+          {relatedPages.map((page, index) => (
             <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Link href={`/${page.full_slug.replace('categories/', '').replace('/pages', '')}`}>
-                <Paper
-                  sx={{
-                    p: 4,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.3s ease',
-                    '&:hover': {
-                      boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)'
-                    }
-                  }}
-                >
+                <Paper sx={{
+                  p: 4,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)'
+                  }
+                }}>
                   {page.content?.image && (
                     <Image
                       src={page.content.image}
                       alt={page.name}
+                      priority={index < 3} // Prioritize first 3 related images
                     />
                   )}
                   <Typography variant="h5">
