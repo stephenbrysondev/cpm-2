@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Paper, Typography, Alert, Container, TextField } from '@mui/material';
+import { Paper, Typography, Box, Chip, Alert, Container, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Loader from '../Loader';
 import Image from '../Image';
@@ -91,7 +91,16 @@ const PageSearch = ({ blok, story, pages = [] }) => {
                                             priority={page.index < 3} // Prioritize first 3 images
                                         />
                                     )}
-                                    <Typography variant="h5">{page.name}</Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        <Typography variant="h6" component="h3">{page.name}</Typography>
+                                        {page.content?.tags && (
+                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                                {getTags(page.content.tags).map((tag, index) => (
+                                                    <Chip key={index} label={tag} size="small" variant="outlined" />
+                                                ))}
+                                            </Box>
+                                        )}
+                                    </Box>
                                 </Paper>
                             </Link>
                         </Grid>

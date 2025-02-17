@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { Container, Typography, Paper, Box, Button, Chip, Alert } from "@mui/material";
+import { Container, Typography, Paper, Box, Button, Chip, Alert, Divider } from "@mui/material";
 import Grid from '@mui/material/Grid2';
 import Link from 'next/link';
 import Image from '../Image';
@@ -68,7 +68,7 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 2
+        gap: 4
       }}
     >
       <Paper elevation={1} sx={{ p: 4 }}>
@@ -91,7 +91,6 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
-              height: '100%'
             }}>
               <Typography variant="h4" component="h1">
                 {blok.title}
@@ -143,41 +142,42 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
       ) : error ? (
         <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
       ) : relatedItems.length > 0 ? (
-        <Grid container spacing={2}>
-          {relatedItems.map((page) => (
-            <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <Link href={`/${page.full_slug}`}>
-                <Paper sx={{
-                  p: 4,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.3s ease',
-                  '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
-                }}>
-                  {page.content?.image && (
-                    <Image
-                      src={page.content.image}
-                      alt={page.name}
-                      priority={page.index < 3} // Prioritize first 3 images
-                    />
-                  )}
-                  <Box>
-                    <Typography variant="h5">{page.name}</Typography>
-                    {page.content?.tags && (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {getTags(page.content.tags).map((tag, index) => (
-                          <Chip key={index} label={tag} size="small" variant="outlined" />
-                        ))}
-                      </Box>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2
+        }}>
+          <Typography variant="h5" component="h2">Related Coloring Pages</Typography>
+          <Grid container spacing={2} >
+            {relatedItems.map((page) => (
+              <Grid key={page.id} size={{ xs: 6, sm: 4, md: 3 }}>
+                <Link href={`/${page.full_slug}`}>
+                  <Paper sx={{
+                    p: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    gap: 2,
+                    cursor: 'pointer',
+                    transition: 'box-shadow 0.3s ease',
+                    '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
+                  }}>
+                    {page.content?.image && (
+                      <Image
+                        src={page.content.image}
+                        alt={page.name}
+                        priority={page.index < 3} // Prioritize first 3 images
+                      />
                     )}
-                  </Box>
-                </Paper>
-              </Link>
-            </Grid>
-          ))}
-        </Grid>
+                    <Box>
+                      <Typography variant="h6" component="h3">{page.name}</Typography>
+                    </Box>
+                  </Paper>
+                </Link>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       ) : (
         <Alert severity="info">No related coloring pages found.</Alert>
       )}

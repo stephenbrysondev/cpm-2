@@ -81,12 +81,13 @@ const PageCategory = ({ blok, story, pages = [] }) => {
       ) : pageItems.length > 0 ? (
         <Grid container spacing={2}>
           {pageItems.map((page) => (
-            <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid key={page.id} size={{ xs: 6, sm: 4, md: 3 }}>
               <Link href={`/${page.full_slug}`}>
                 <Paper sx={{
                   p: 4,
                   display: 'flex',
                   flexDirection: 'column',
+                  height: '100%',
                   gap: 2,
                   cursor: 'pointer',
                   transition: 'box-shadow 0.3s ease',
@@ -99,7 +100,7 @@ const PageCategory = ({ blok, story, pages = [] }) => {
                       priority={page.index < 3} // Prioritize first 3 images
                     />
                   )}
-                  <Typography variant="h5">{page.name}</Typography>
+                  <Typography variant="h6" component="h3">{page.name}</Typography>
                 </Paper>
               </Link>
             </Grid>
