@@ -7,6 +7,11 @@ import Link from 'next/link';
 import Image from '../Image';
 import DownloadIcon from '@mui/icons-material/Download';
 import Loader from '../Loader';
+import { useAuth } from '../../lib/context/AuthContext';
+import { supabase } from '../../lib/supabase';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import React from 'react';
 
 const getTags = (tagsString) => {
   if (!tagsString) return [];
@@ -25,6 +30,68 @@ const getCategoryFromSlug = (fullSlug) => {
 };
 
 const PageDetail = ({ blok, story, relatedPages = [] }) => {
+  const { user } = useAuth();
+  const [isSaved, setIsSaved] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Check if page is saved on component mount
+  React.useEffect(() => {
+    if (user) {
+      checkIfPageIsSaved();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user, story.id]);
+
+  const checkIfPageIsSaved = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_pages')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('page_id', story.id);
+
+      setIsSaved(data && data.length > 0);
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+    }
+    setIsLoading(false);
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      if (isSaved) {
+        // Remove from saved pages
+        await supabase
+          .from('saved_pages')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('page_id', story.id);
+        setIsSaved(false);
+      } else {
+        // Add to saved pages
+        await supabase
+          .from('saved_pages')
+          .insert([
+            {
+              user_id: user.id,
+              page_id: story.id,
+              page_data: {
+                title: blok.title,
+                image: blok.image,
+                slug: story.full_slug
+              }
+            }
+          ]);
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error saving page:', error);
+    }
+  };
+
   // Get the category path by removing the /pages/... part
   const categoryPath = story.full_slug.split('/pages/')[0].replace(/\/$/, '');
 
@@ -131,6 +198,16 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
                 >
                   Download
                 </Button>
+                {user && !isLoading && (
+                  <Button
+                    variant="outlined"
+                    startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                    onClick={handleSave}
+                    disableElevation
+                  >
+                    {isSaved ? 'Saved' : 'Save'}
+                  </Button>
+                )}
               </Box>
             </Box>
           </Grid>

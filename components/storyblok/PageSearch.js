@@ -17,7 +17,6 @@ const fetcher = (url) => fetch(url).then(res => res.json());
 
 const PageSearch = ({ blok, story, pages = [] }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    console.log('debug', story);
     // Get the full category path from the story slug and remove trailing slash
 
     const { data, error, isValidating } = useSWR(searchTerm ? `/api/search?q=${searchTerm}` : null,
