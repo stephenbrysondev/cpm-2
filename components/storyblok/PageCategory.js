@@ -1,12 +1,10 @@
 'use client';
 
 import useSWR from 'swr';
-import Link from 'next/link';
 import { Paper, Typography, Box, Chip, Alert, Container } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Loader from '../Loader';
-import Image from '../Image';
-
+import Thumbnail from '../Thumbnail';
 const getTags = (tagsString) => {
   if (!tagsString) return [];
   return tagsString.split(',').map(tag => tag.trim());
@@ -26,6 +24,8 @@ const PageCategory = ({ blok, story, pages = [] }) => {
       onError: (err) => console.error('SWR Error:', err)
     }
   );
+
+  console.log({ isValidating });
 
   // Get a clean category name for display
   const categoryName = story.name || categoryPath.split('/').pop().split('-')
@@ -75,41 +75,35 @@ const PageCategory = ({ blok, story, pages = [] }) => {
       </Paper>
 
       {isValidating ? (
-        <Loader message="Loading coloring pages..." />
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+            <Thumbnail loading={true} />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+            <Thumbnail loading={true} />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+            <Thumbnail loading={true} />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+            <Thumbnail loading={true} />
+          </Grid>
+        </Grid>
       ) : error ? (
         <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
       ) : pageItems.length > 0 ? (
         <Grid container spacing={2}>
           {pageItems.map((page) => (
             <Grid key={page.id} size={{ xs: 6, sm: 4, md: 3 }}>
-              <Link href={`/${page.full_slug}`}>
-                <Paper sx={{
-                  p: 4,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  gap: 2,
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.3s ease',
-                  '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
-                }}>
-                  {page.content?.image && (
-                    <Image
-                      src={page.content.image}
-                      alt={page.name}
-                      priority={page.index < 3} // Prioritize first 3 images
-                    />
-                  )}
-                  <Typography variant="h6" component="h3">{page.name}</Typography>
-                </Paper>
-              </Link>
+              <Thumbnail href={`/${page.full_slug}`} image={page.content?.image} title={page.name} loading={isValidating} />
             </Grid>
           ))}
         </Grid>
       ) : (
         <Alert severity="info">No coloring pages found in this category.</Alert>
-      )}
-    </Container>
+      )
+      }
+    </Container >
   );
 };
 

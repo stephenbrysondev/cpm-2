@@ -3,7 +3,6 @@
 import useSWR from 'swr';
 import { Container, Typography, Paper, Box, Button, Chip, Alert, Divider } from "@mui/material";
 import Grid from '@mui/material/Grid2';
-import Link from 'next/link';
 import Image from '../Image';
 import DownloadIcon from '@mui/icons-material/Download';
 import Loader from '../Loader';
@@ -12,6 +11,7 @@ import { supabase } from '../../lib/supabase';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import React from 'react';
+import Thumbnail from '../Thumbnail';
 
 const getTags = (tagsString) => {
   if (!tagsString) return [];
@@ -213,51 +213,42 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
           </Grid>
         </Grid>
       </Paper>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2
+      }}>
+        <Typography variant="h5" component="h2">More {categoryName} Coloring Pages</Typography>
+        {isValidating ? (
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+              <Thumbnail loading={true} />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+              <Thumbnail loading={true} />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+              <Thumbnail loading={true} />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+              <Thumbnail loading={true} />
+            </Grid>
+          </Grid>
+        ) : error ? (
+          <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
+        ) : relatedItems.length > 0 ? (
 
-      {isValidating ? (
-        <Loader message="Loading coloring pages..." />
-      ) : error ? (
-        <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
-      ) : relatedItems.length > 0 ? (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2
-        }}>
-          <Typography variant="h5" component="h2">Related Coloring Pages</Typography>
           <Grid container spacing={2} >
             {relatedItems.map((page) => (
               <Grid key={page.id} size={{ xs: 6, sm: 4, md: 3 }}>
-                <Link href={`/${page.full_slug}`}>
-                  <Paper sx={{
-                    p: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                    gap: 2,
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.3s ease',
-                    '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
-                  }}>
-                    {page.content?.image && (
-                      <Image
-                        src={page.content.image}
-                        alt={page.name}
-                        priority={page.index < 3} // Prioritize first 3 images
-                      />
-                    )}
-                    <Box>
-                      <Typography variant="h6" component="h3">{page.name}</Typography>
-                    </Box>
-                  </Paper>
-                </Link>
+                <Thumbnail href={`/${page.full_slug}`} image={page.content?.image} title={page.name} />
               </Grid>
             ))}
           </Grid>
-        </Box>
-      ) : (
-        <Alert severity="info">No related coloring pages found.</Alert>
-      )}
+        ) : (
+          <Alert severity="info">No related coloring pages found.</Alert>
+        )}
+      </Box>
     </Container>
   );
 };

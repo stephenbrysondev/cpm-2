@@ -2,11 +2,10 @@
 
 import useSWR from 'swr';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Paper, Typography, Box, Chip, Alert, Container, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Loader from '../Loader';
-import Image from '../Image';
+import Thumbnail from '../Thumbnail';
 
 const getTags = (tagsString) => {
     if (!tagsString) return [];
@@ -66,42 +65,24 @@ const PageSearch = ({ blok, story, pages = [] }) => {
             </Paper>
 
             {isValidating ? (
-                <Loader message="Loading coloring pages..." />
+                <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Thumbnail loading={true} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Thumbnail loading={true} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Thumbnail loading={true} />
+                    </Grid>
+                </Grid>
             ) : error ? (
                 <Alert severity="error">Failed to load coloring pages. Please try again later.</Alert>
             ) : data && data.length > 0 ? (
                 <Grid container spacing={2}>
                     {data.map((page) => (
                         <Grid key={page.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                            <Link href={`/${page.full_slug}`}>
-                                <Paper sx={{
-                                    p: 4,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 2,
-                                    cursor: 'pointer',
-                                    transition: 'box-shadow 0.3s ease',
-                                    '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }
-                                }}>
-                                    {page.content?.image && (
-                                        <Image
-                                            src={page.content.image}
-                                            alt={page.name}
-                                            priority={page.index < 3} // Prioritize first 3 images
-                                        />
-                                    )}
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                        <Typography variant="h6" component="h3">{page.name}</Typography>
-                                        {page.content?.tags && (
-                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                                {getTags(page.content.tags).map((tag, index) => (
-                                                    <Chip key={index} label={tag} size="small" variant="outlined" />
-                                                ))}
-                                            </Box>
-                                        )}
-                                    </Box>
-                                </Paper>
-                            </Link>
+                            <Thumbnail href={`/${page.full_slug}`} image={page.content?.image} title={page.name} tags={getTags(page.content?.tags)} />
                         </Grid>
                     ))}
                 </Grid>
