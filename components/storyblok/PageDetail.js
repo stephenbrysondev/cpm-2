@@ -92,8 +92,8 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
     }
   };
 
-  // Get the category path by removing the /pages/... part
-  const categoryPath = story.full_slug.split('/pages/')[0].replace(/\/$/, '');
+  // Get the category path by removing everything after the last folder
+  const categoryPath = story.full_slug.split('/').slice(0, -1).join('/');
 
   const { data, error, isValidating } = useSWR(
     categoryPath ? `/api/search?path=${encodeURIComponent(categoryPath)}` : null,
@@ -104,9 +104,8 @@ const PageDetail = ({ blok, story, relatedPages = [] }) => {
     }
   );
 
-  // Filter out the current page and ensure we only show page items
+  // Filter out the current page and ensure we only show related items
   const relatedItems = data?.filter(item =>
-    item.full_slug.includes('/pages/') &&
     item.id !== story.id
   ) || [];
 

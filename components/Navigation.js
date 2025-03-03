@@ -34,7 +34,6 @@ export default function Navigation() {
 
     const menuItems = [
         { text: 'About', href: '/about' },
-        { text: 'Pricing', href: '/pricing' },
         { text: 'Free Coloring Pages', href: '/coloring-pages' },
     ];
 

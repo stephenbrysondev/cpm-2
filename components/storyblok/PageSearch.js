@@ -18,7 +18,8 @@ const PageSearch = ({ blok, story, pages = [] }) => {
     const [searchTerm, setSearchTerm] = useState('');
     // Get the full category path from the story slug and remove trailing slash
 
-    const { data, error, isValidating } = useSWR(searchTerm ? `/api/search?q=${searchTerm}` : null,
+    const { data, error, isValidating } = useSWR(
+        `/api/search?q=${searchTerm}`,
         fetcher,
         {
             revalidateOnFocus: false,
@@ -86,9 +87,9 @@ const PageSearch = ({ blok, story, pages = [] }) => {
                         </Grid>
                     ))}
                 </Grid>
-            ) : (
-                <Alert severity="info">No coloring pages found in this category.</Alert>
-            )}
+            ) : searchTerm ? (
+                <Alert severity="info">No coloring pages found for "{searchTerm}"</Alert>
+            ) : null}
         </Container>
     );
 };

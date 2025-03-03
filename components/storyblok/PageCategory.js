@@ -25,15 +25,13 @@ const PageCategory = ({ blok, story, pages = [] }) => {
     }
   );
 
-  console.log({ isValidating });
-
   // Get a clean category name for display
   const categoryName = story.name || categoryPath.split('/').pop().split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
-  // Filter out any non-page items and sort by name
-  const pageItems = data?.filter(item => item.full_slug.includes('/pages/')) || [];
+  // Filter out the folder itself and sort by name
+  const pageItems = data?.filter(item => item.full_slug !== categoryPath) || [];
 
   return (
     <Container
